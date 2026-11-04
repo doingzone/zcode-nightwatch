@@ -14,7 +14,8 @@ param(
     [string]$NightWindow = "23:00-09:00",
     [int]$IntervalMinutes = 30,
     [int]$HangThresholdMin = 15,
-    [string]$TaskName = "ZCodeNightwatch"
+    [string]$TaskName = "ZCodeNightwatch",
+    [string]$ZcodeDataDir = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -67,9 +68,15 @@ if (-not $ZcodeExe -or -not (Test-Path $ZcodeExe)) {
 }
 
 # --- write config next to the script ---
+# zcode_data_dir: ZCode desktop data dir (v2\logs and tasks-index.sqlite live
+# there) - defaults to %USERPROFILE%\.zcode; override with -ZcodeDataDir.
+if (-not $ZcodeDataDir) {
+    $ZcodeDataDir = Join-Path $env:USERPROFILE ".zcode"
+}
 $parts = $NightWindow -split "-"
 $config = [ordered]@{
     zcode_exe          = $ZcodeExe
+    zcode_data_dir     = $ZcodeDataDir
     window             = @($parts[0].Trim(), $parts[1].Trim())
     hang_threshold_min = $HangThresholdMin
 }

@@ -39,6 +39,19 @@ description: 守夜人——为 ZCode 桌面端夜间无人值守自动化任务
 powershell -NoProfile -ExecutionPolicy Bypass -File nightwatch/uninstall-nightwatch.ps1
 ```
 
+### 效果战报(用户问"效果如何 / 挽回记录 / 战报 / 感受一下"时)
+
+```bash
+python nightwatch/nightwatch_report.py            # 近 7 天
+python nightwatch/nightwatch_report.py --days 30  # 近 30 天
+python nightwatch/nightwatch_report.py --md       # 结果另存 nightwatch-report.md
+```
+
+读给用户时讲清两层口径:**客户端补丁层**(429 忙碌重试计数,依赖 zcode-fixes 补丁在场,
+报告头部会标注在场状态)与**应用守护层**(崩溃拉起 / 卡死重启,守夜人本体)。"未挽回"
+一栏来自 tasks-index 的 lastError——会话后续成功运行会覆盖清零,故只反映当前在册的
+回合死亡,不代表历史累计。
+
 ## 设计要点(改代码前必读)
 
 - **必须以 pythonw.exe 运行 + 所有子进程 CREATE_NO_WINDOW**:这是"无感"的根,改回
