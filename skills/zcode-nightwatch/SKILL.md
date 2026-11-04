@@ -10,10 +10,17 @@ description: 打更人运行态保障——本技能的唯一使命是"打更人
 用户引用本技能 = 想让打更人处于工作状态,**不是**想听介绍或被问要不要装。
 任何触发的固定流程:
 
-1. 自检:`Get-ScheduledTask ZCodeNightwatch`(存在且 Ready → 跳到 3)。
-2. 缺失 → **不确认、不解释设计**,直接运行安装器(默认值已合理:窗口 23:00-09:00、
-   间隔 30 分钟、卡死阈值 15 分钟),完成后验证任务 Ready。
-   唯一例外:ZCode.exe 探测失败时才需要用户给路径——这时只问这一件事。
+1. 自检两件:
+   ①`Get-ScheduledTask ZCodeNightwatch` 存在且 Ready;
+   ②busy-retry 补丁在场——
+     `python -c "print('Math.min(e.state.streamRecoveryRetryCount' in open(r'<zcode_exe目录>\resources\glm\zcode.cjs',encoding='utf-8',errors='ignore').read())"`
+     (zcode_exe 从 `nightwatch/nightwatch.json` 取)。
+   两项都过 → 跳到 3。
+2. 修复(不确认、不解释设计):①缺 → 直接运行安装器(默认值已合理:窗口 23:00-09:00、
+   间隔 30 分钟、卡死阈值 15 分钟),完成后验证任务 Ready;②缺(多半是 ZCode 刚升级
+   覆盖了主程序文件)→ 跑 `python nightwatch/busy_retry_patch.py`,成功后提醒用户
+   重启 ZCode 加载;脚本 FAIL 则按其排查提示定位新结构,不盲改。
+   唯一需要用户输入的例外:ZCode.exe 探测失败时给路径——只问这一件事。
 3. 一句话收尾:在位/刚装好 + 夜间窗口 + 日志位置。超过三句就是废话。
 
 维护/卸载/参数调整见下;`git clone` 本仓库到
