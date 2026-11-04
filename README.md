@@ -1,28 +1,50 @@
-# ZCode Nightwatch(守夜人)
+<div align="center">
 
-> 长夜将至,我从今开始守望。
-> 你的 ZCode 夜间自动化任务由它值守——崩溃自动拉起,卡死自动重启,全程无感。
+# 🌙 ZCode Nightwatch(守夜人)
 
-**ZCode Nightwatch** 是一个 Windows 计划任务技能:在你设定的夜间窗口内,每 30 分钟
-巡查一次 ZCode 桌面端。它专治无人值守场景下最烦人的两种死法:
+**Night-shift guardian for ZCode desktop automations.**
+A silent Windows scheduled-task guardian that keeps your unattended ZCode
+night runs alive — relaunches crashed instances, restarts hung ones,
+and reports exactly what it saved.
 
-| 症状 | 处置 |
-|------|------|
-| ZCode 崩溃退出(夜间自动化全灭) | 下一次巡查自动拉起,会话自动恢复 |
-| 应用卡死无响应(鼠标转圈点不动) | 连续两个周期确认后强杀重启,不误杀短暂卡顿 |
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Platform](https://img.shields.io/badge/platform-Windows%2010%2B-blue)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+![Mode](https://img.shields.io/badge/runtime-pythonw%20%2B%20CREATE__NO__WINDOW-success)
 
-## 特性
+**长夜将至,我从今开始守望。**
+你的 ZCode 夜间自动化任务由它值守——崩溃自动拉起,卡死自动重启,全程无感。
 
-- **无感运行**——计划任务动作是无控制台的 `pythonw.exe`,脚本内所有子进程带
-  `CREATE_NO_WINDOW`,零窗口闪烁,你感知不到它的存在
-- **一条命令安装**——自动探测 ZCode 安装路径(注册表)与 pythonw,写好配置、注册任务
-- **可配置**——夜间窗口、检查间隔、卡死阈值全部参数化,配置文件热生效
-- **保守处置**——卡死重启需跨两个检查周期确认,绝不误杀;白天窗口外完全不干活
-- **效果战报**——三种方式随时查看真实记录:429 忙碌重试自动挽回多少次、崩溃拉起/
-  卡死重启各多少次、未挽回案例列表,效果可量化(详见下文[查看战报](#查看战报))
-- **agent 友好**——根目录即 SKILL.md,丢进 `.agents/skills` 即可让 AI 助手代装代管
+[快速开始](#-快速开始) · [查看战报](#查看战报) · [配置](#配置) · [FAQ](#faq)
 
-## 安装
+</div>
+
+---
+
+## 😮 为什么需要它
+
+无人值守的夜间自动化,最怕的不是任务写错,而是**凌晨三点人不在场时应用自己死掉**:
+
+- ZCode 宿主进程崩溃,跑了几个小时的自动化任务全灭,早上起来只能重跑;
+- 应用卡死无响应,鼠标转圈,任务停在半截;
+- 你给 AI 助手装了各种补丁和守护,但 AI 只在会话里,会话死了 AI 也睡了。
+
+本仓库作者的真实一夜(2026-10-28):宿主进程连崩三次(02:03、02:48、02:53),
+一次跑了 27 分钟的自动化任务死在半路。**守夜人因此诞生——当晚就自动拉起了 9 次。**
+
+## ✨ 特性
+
+- 🌙 **夜间窗口值守**——默认 23:00–09:00 每 30 分钟巡查,白天零活动(触发即秒退)
+- 🔁 **崩溃自动拉起**——进程消失,下一次巡查自动启动,夜间自动化不断线
+- 🪓 **卡死自动重启**——主窗口无响应跨两个周期确认才动手,绝不误杀短暂卡顿
+- 🤫 **全程无感**——计划任务动作是无控制台的 `pythonw.exe`,所有子进程带
+  `CREATE_NO_WINDOW`,零窗口闪烁
+- 📊 **效果战报**——一条命令查看真实挽回记录,数字全部来自磁盘日志,可量化、可晒图
+- 🤖 **agent 友好**——仓库根即 SKILL.md,丢进 `.agents/skills` 你的 AI 助手就会装、会管、会汇报
+
+## 🚀 快速开始
+
+要求:Windows 10+、Python 3.8+(含 pythonw)、ZCode 桌面端。
 
 ### 方式一:让 AI 助手装(推荐)
 
@@ -30,11 +52,13 @@
 git clone https://github.com/doingzone/zcode-nightwatch "%USERPROFILE%\.agents\skills\zcode-nightwatch"
 ```
 
-clone 完即完成。之后**任何一次提到守夜人**(比如随口问一句"守夜人在吗"),AI 助手
-都会先自检守护任务——缺失就静默装好,不问第二句。技能内建两个入口:
+clone 完即结束。之后**任何一次提到守夜人**(比如随口问一句"守夜人在吗"),AI 助手
+都会自检守护任务——缺失就静默装好,不问第二句。装好后你会得到两个命令:
 
-- **`/zcode-nightwatch`** —— 运行态保障(自检/缺装/改配置/卸载)
-- **`/zcode-nightwatch-report`** —— 随时查看战报(会调用 humanizer 技能说人话,若已安装)
+| 命令 | 用途 |
+|------|------|
+| `/zcode-nightwatch` | 运行态保障:自检 / 缺装 / 改配置 / 卸载 |
+| `/zcode-nightwatch-report` | 查看战报(已安装 humanizer 技能时自动说人话) |
 
 ### 方式二:手动一条命令
 
@@ -46,11 +70,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File zcode-nightwatch\nightwatch\
 可选参数:`-ZcodeExe "D:\...\ZCode.exe"`(探测失败时指定)、`-NightWindow "23:00-09:00"`、
 `-IntervalMinutes 30`、`-HangThresholdMin 15`、`-ZcodeDataDir "D:\...\.zcode"`(战报数据源,默认 `%USERPROFILE%\.zcode`)。
 
-## 查看战报
+## 📊 查看战报
 
 三种方式,随你顺手:
 
-**① 对 AI 助手敲命令**(会调用 humanizer 技能说人话,若已安装):
+**① 对 AI 助手敲命令**(已安装 humanizer 技能时自动说人话):
 
 ```
 /zcode-nightwatch-report
@@ -70,7 +94,7 @@ nightwatch --md         # 另存 nightwatch-report.md
 python nightwatch/nightwatch_report.py
 ```
 
-真实输出长这样(本机 2026-11-05 实测):
+真实输出(本机 2026-11-05 实测):
 
 ```
 === 守夜人战报(近 30 天,2026-11-05 00:58 生成)===
@@ -89,7 +113,7 @@ python nightwatch/nightwatch_report.py
 每一行都是磁盘上的真实记录:429 撞车被自动消化多少次、ZCode 崩溃被拉起多少次、
 有没有漏救的。
 
-## 配置
+## ⚙️ 配置
 
 `nightwatch/nightwatch.json`(安装器生成,改完下一轮生效,无需重注册):
 
@@ -104,18 +128,51 @@ python nightwatch/nightwatch_report.py
 
 日志:`nightwatch/nightwatch.log`,每次运行一行;非 `alive` 行即事件(启动/重启/等待确认)。
 
-## 工作原理
+## 🔬 工作原理
 
 每 30 分钟触发一次 → 窗口外立即退出 → 窗口内:`tasklist` 查进程 → 不在则
 `os.startfile` 拉起;在则用 `Get-Process` 检查主窗口 `Responding`,无响应需跨两个周期
-确认(状态文件记录首次发现时刻)再 `taskkill` 重启。整个链路对用户不可见。
+确认(状态文件记录首次发现时刻)再 `taskkill` 重启。整条链路对用户不可见。
 
-## 边界
+ZCode 安装路径自动探测:注册表卸载表(NSIS 条目的 `InstallLocation` 常为空,会从
+`UninstallString` / `DisplayIcon` 反推)→ `LOCALAPPDATA` 默认路径 → 安装时手动指定。
 
-- 只管**应用级**生死;模型 API 429/限流、配额耗尽不归它管。
-- 只守护交互登录会话;ZCode 崩溃时正在跑的 agent 会话由 ZCode 自身恢复,守夜人不重发任务。
-- 卸载:`powershell -File nightwatch\uninstall-nightwatch.ps1`,干净利落。
+## ❓ FAQ
 
-## License
+<details>
+<summary><b>会弹出黑色控制台窗口吗?</b></summary>
 
-MIT
+不会。计划任务动作是 `pythonw.exe`(无控制台 Python),脚本内所有子进程
+(tasklist / powershell / taskkill)带 `CREATE_NO_WINDOW` 创建,零窗口闪烁。
+</details>
+
+<details>
+<summary><b>白天会偷偷运行吗?</b></summary>
+
+计划任务全天触发,但脚本第一件事就是检查夜间窗口(默认 23:00–09:00)——窗口外
+立即退出,零活动、零日志、零感知。
+</details>
+
+<details>
+<summary><b>会误杀正在卡顿的 ZCode 吗?</b></summary>
+
+卡死重启需要跨两个检查周期确认(首次发现只记状态不动作),且阈值可配。
+宁可慢一分钟,不可错杀一次。
+</details>
+
+<details>
+<summary><b>429 / 限流报错它管吗?</b></summary>
+
+守夜人管**应用级**生死(进程崩溃/卡死)。模型 API 限流由配套的客户端补丁层处理
+(启动器重试至插入为止),战报会把两层的挽回记录一起呈现,并标注补丁是否在场。
+</details>
+
+## 🧱 边界
+
+- 只守护交互登录会话(拉起的窗口才会出现在你的桌面上);
+- ZCode 崩溃时正在跑的 agent 会话由 ZCode 自身恢复,守夜人不重发任务;
+- 不管理模型 API 报错与配额。
+
+## 📄 License
+
+[MIT](LICENSE) © 2026 doingzone
