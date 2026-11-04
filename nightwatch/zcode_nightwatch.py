@@ -16,8 +16,18 @@ install-nightwatch.ps1):
     {
       "zcode_exe": "D:\\...\\ZCode.exe",
       "window": ["23:00", "09:00"],
-      "hang_threshold_min": 15
+      "hang_threshold_min": 15,
+      "busy_retry_window": "all_day",
+      "extra_patchers": [                       # optional, beyond busy-retry
+        {"name": "compact-70%", "marker": "Math.max(0,Math.floor(t*.7))",
+         "script": "D:\\...\\zcode-compact-patch.py"}
+      ]
     }
+
+Patch self-heal runs on EVERY tick (day and night - upgrades happen any
+time): when the busy-retry / extra patch markers are absent from zcode.cjs
+(i.e. ZCode just upgraded), the patchers are re-applied silently. The patched
+code loads on the app's next start; ZCode is NEVER restarted by the heal step.
 
 CLI flags override the config:
     --force                  ignore the night window (testing)
@@ -149,6 +159,59 @@ def restart_zcode(exe: str, dry: bool) -> None:
     log("killed hung ZCode and restarted")
 
 
+BUSY_MARKER = "Math.min(e.state.streamRecoveryRetryCount"
+
+
+def patch_selfheal(cfg: dict, dry: bool) -> None:
+    """Re-apply client patches when their markers vanished from zcode.cjs.
+
+    A missing marker means ZCode upgraded and the bundle was replaced. The
+    patchers are idempotent and pre-flight node --check the bundle, so a
+    half-written (mid-upgrade) file is skipped and retried on the next tick.
+    """
+    exe = cfg.get("zcode_exe")
+    if not exe:
+        return
+    cjs = Path(str(exe)).parent / "resources" / "glm" / "zcode.cjs"
+    if not cjs.exists():
+        return
+    guards = []
+    if (cfg.get("busy_retry_window") or "all_day") != "off":
+        guards.append(("busy-retry", BUSY_MARKER, HERE / "busy_retry_patch.py",
+                       ["--zcode-exe", str(exe)]))
+    for extra in cfg.get("extra_patchers", []):
+        try:
+            guards.append((extra.get("name", Path(extra["script"]).stem),
+                           extra["marker"], Path(extra["script"]),
+                           list(extra.get("args", []))))
+        except (KeyError, TypeError):
+            log(f"[FAIL] bad extra_patchers entry: {extra}")
+    for name, marker, script, sargs in guards:
+        try:
+            present = marker in cjs.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            return   # file churn (mid-upgrade) - wait for the next tick
+        if present:
+            continue
+        if dry:
+            log(f"[dry-run] would re-apply {name} patch (marker absent)")
+            continue
+        if not script.exists():
+            log(f"[FAIL] {name} patcher missing: {script}")
+            continue
+        try:
+            r = subprocess.run([sys.executable, str(script), *sargs],
+                               capture_output=True, text=True, timeout=300,
+                               creationflags=NO_WINDOW)
+        except (OSError, subprocess.TimeoutExpired) as e:
+            log(f"[FAIL] {name} patch reapply error: {e}")
+            continue
+        if r.returncode == 0:
+            log(f"patch reapplied: {name} (marker was absent -> ZCode upgrade?)")
+        else:
+            log(f"[FAIL] {name} patch reapply rc={r.returncode} - anchor review needed")
+
+
 def main() -> int:
     args = sys.argv[1:]
     force = "--force" in args
@@ -161,6 +224,8 @@ def main() -> int:
     window = parse_window(args[args.index("--window") + 1] if "--window" in args
                           else cfg.get("window", ["23:00", "09:00"]))
     hang_min = int(cfg.get("hang_threshold_min", 15))
+
+    patch_selfheal(cfg, dry)   # every tick, window-independent: silent file work only
 
     now = datetime.now()
     if not force and not in_window(now, window):

@@ -27,12 +27,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
 from datetime import date, datetime
 from pathlib import Path
+
+# spawned from the windowless watchdog chain - never flash a console
+NO_WINDOW = 0x08000000 if os.name == "nt" else 0
 
 HERE = Path(__file__).resolve().parent
 CONFIG_PATH = HERE / "nightwatch.json"
@@ -247,6 +251,17 @@ def main() -> int:
     if not changed:
         return 0
 
+    node = shutil.which("node")
+    if node:
+        # pre-flight: refuse to patch a bundle that fails syntax check -
+        # that is a half-written file (mid-upgrade), patching it would
+        # corrupt the install. Re-run later; nothing is written.
+        pre = subprocess.run([node, "--check", str(cjs)], capture_output=True,
+                             text=True, creationflags=NO_WINDOW)
+        if pre.returncode != 0:
+            print("[SKIP] zcode.cjs fails node --check (mid-upgrade or corrupt) - not patching now")
+            return 0
+
     backup = cjs.with_suffix(f".cjs.bak-{date.today():%Y%m%d}")
     if not backup.exists():
         shutil.copy2(cjs, backup)
@@ -263,7 +278,8 @@ def main() -> int:
 
     node = shutil.which("node")
     if node:
-        proc = subprocess.run([node, "--check", str(cjs)], capture_output=True, text=True)
+        proc = subprocess.run([node, "--check", str(cjs)], capture_output=True,
+                              text=True, creationflags=NO_WINDOW)
         if proc.returncode != 0:
             print("[FAIL] node --check rejected the patched bundle:")
             print(proc.stderr[:500])

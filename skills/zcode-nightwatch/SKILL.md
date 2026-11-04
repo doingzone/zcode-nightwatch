@@ -74,7 +74,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File nightwatch/uninstall-nightwa
 - 无响应重启跨**两次**检查确认(状态文件 `nightwatch-state.json` 记首次发现时刻),
   防止把短暂卡顿误杀;30 分钟节奏下从卡死到重启最坏 30-60 分钟,属设计取舍。
 - 窗口判断支持跨午夜(`start > end` 形态)。
-- 白天(窗口外)触发会直接退出——这是特性不是 bug。
+- **补丁自愈(patch_selfheal)每跳必跑、不做窗口门控**——升级随时发生;它只静默读写
+  文件(补丁标记消失 → 重跑 patcher),**绝不因此重启 ZCode**,补丁在应用下次启动时
+  自然加载。挂新补丁进自愈:nightwatch.json 的 `extra_patchers` 加
+  `{name, marker, script}`。
+- 白天(窗口外)触发会直接退出巡更逻辑——这是特性不是 bug;但补丁自愈在窗口判断之前
+  已完成,不受此限。
 
 ## 坑速查(Windows + Git Bash)
 

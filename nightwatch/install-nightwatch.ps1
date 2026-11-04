@@ -120,7 +120,13 @@ $config = [ordered]@{
     hang_threshold_min = $HangThresholdMin
     busy_retry_window  = $BusyRetryWindow
 }
-$config | ConvertTo-Json | Set-Content -Path (Join-Path $PSScriptRoot "nightwatch.json") -Encoding UTF8
+# preserve keys the installer doesn't manage (e.g. extra_patchers added by hand)
+if ($existing) {
+    foreach ($p in $existing.PSObject.Properties) {
+        if (-not $config.Contains($p.Name)) { $config[$p.Name] = $p.Value }
+    }
+}
+$config | ConvertTo-Json -Depth 5 | Set-Content -Path (Join-Path $PSScriptRoot "nightwatch.json") -Encoding UTF8
 
 # --- register the scheduled task (interactive session: os.startfile must land
 # on the user's desktop, so no S4U / no "whether logged on" mode) ---

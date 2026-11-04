@@ -149,7 +149,7 @@ def scan_unsaved(index_path: Path, days: int) -> list:
 
 def scan_watchdog_log(days: int) -> dict:
     since = datetime.now() - timedelta(days=days)
-    out = {"relaunch": 0, "restart": 0, "checks": 0, "events": []}
+    out = {"relaunch": 0, "restart": 0, "checks": 0, "reapplied": 0, "events": []}
     if not NW_LOG.exists():
         return out
     for line in NW_LOG.read_text(encoding="utf-8", errors="ignore").splitlines():
@@ -164,6 +164,9 @@ def scan_watchdog_log(days: int) -> dict:
             continue
         if "alive (" in line:
             out["checks"] += 1
+        elif "patch reapplied" in line:
+            out["reapplied"] += 1
+            out["events"].append(f"{ts[5:]}  换了宅子补丁被扫了 → 自动补回")
         elif "not running -> starting" in line:
             out["relaunch"] += 1
             out["events"].append(f"{ts[5:]}  三更天,ZCode 没了 → 点灯拉起")
@@ -245,7 +248,7 @@ def main() -> int:
         lines.append(f"    - {r['date']} [{r['code']}] {r['title'][:40]}")
     lines.append("")
     lines.append(f"[应用守护层] 巡更: {nw['checks']} 次")
-    lines.append(f"  点灯拉起: {nw['relaunch']} 次;拍醒重启: {nw['restart']} 次")
+    lines.append(f"  点灯拉起: {nw['relaunch']} 次;拍醒重启: {nw['restart']} 次;补丁自动重打: {nw['reapplied']} 次")
     for e in nw["events"][:10]:
         lines.append(f"    - {e}")
     lines.append("")
