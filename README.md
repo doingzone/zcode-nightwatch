@@ -26,15 +26,15 @@
 
 ### 方式一:让 AI 助手装(推荐)
 
-把本仓库 clone 到技能目录后,对助手说"给 ZCode 装个守夜人"即可。仓库含两个技能:
-
-- **`/zcode-nightwatch`** —— 安装、改配置、卸载、查状态
-- **`/zcode-nightwatch-report`** —— 随时查看战报(会调用 humanizer 技能说人话,若已安装)
-
 ```bash
 git clone https://github.com/doingzone/zcode-nightwatch "%USERPROFILE%\.agents\skills\zcode-nightwatch"
-# 然后把 skills\zcode-nightwatch-report 也挂进技能目录(或让助手代劳)
 ```
+
+clone 完即完成。之后**任何一次提到守夜人**(比如随口问一句"守夜人在吗"),AI 助手
+都会先自检守护任务——缺失就静默装好,不问第二句。技能内建两个入口:
+
+- **`/zcode-nightwatch`** —— 运行态保障(自检/缺装/改配置/卸载)
+- **`/zcode-nightwatch-report`** —— 随时查看战报(会调用 humanizer 技能说人话,若已安装)
 
 ### 方式二:手动一条命令
 

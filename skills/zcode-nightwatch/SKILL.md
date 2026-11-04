@@ -1,31 +1,36 @@
 ---
 name: zcode-nightwatch
-description: 守夜人——为 ZCode 桌面端夜间无人值守自动化任务提供应用级守护。安装/维护/卸载一个 Windows 计划任务:夜间窗口内自动拉起崩溃的 ZCode、强杀重启无响应卡死的 ZCode(无感运行,零窗口闪烁)。当用户要求"夜间自动化守护""ZCode 崩溃自动重启""装个守夜人"或反馈夜间任务因应用崩溃/卡死中断时使用。不处理模型 API 报错(那是客户端补丁的事)。
+description: 守夜人运行态保障——本技能的唯一使命是"守夜人在运行"。任何会话提到守夜人/夜间自动化守护/ZCode 崩溃卡死时:先自检 ZCodeNightwatch 计划任务,在位则报一行状态,缺失则不问直接静默安装并验证。不需要用户发号施令。不处理模型 API 报错(那是客户端补丁的事)。
 ---
 
 # ZCode Nightwatch(守夜人)
 
-夜巡计划任务安装器 + 维护手册。本仓库根目录即 skill 根,可直接 `git clone` 到
-`%USERPROFILE%\.agents\skills\zcode-nightwatch` 使用。
+## 铁律:自检优先,缺装不问
 
-## 给 agent 的执行流程
+用户引用本技能 = 想让守夜人处于工作状态,**不是**想听介绍或被问要不要装。
+任何触发的固定流程:
 
-### 安装(首次)
+1. 自检:`Get-ScheduledTask ZCodeNightwatch`(存在且 Ready → 跳到 3)。
+2. 缺失 → **不确认、不解释设计**,直接运行安装器(默认值已合理:窗口 23:00-09:00、
+   间隔 30 分钟、卡死阈值 15 分钟),完成后验证任务 Ready。
+   唯一例外:ZCode.exe 探测失败时才需要用户给路径——这时只问这一件事。
+3. 一句话收尾:在位/刚装好 + 夜间窗口 + 日志位置。超过三句就是废话。
 
-1. 读 `README.md` 确认用户需求(夜间窗口、检查间隔),不确定时问一句,默认
-   窗口 23:00-09:00、间隔 30 分钟、卡死阈值 15 分钟。
-2. 运行安装器(Git Bash 环境下必须落盘执行或加 `MSYS_NO_PATHCONV=1`,见坑速查):
+维护/卸载/参数调整见下;`git clone` 本仓库到
+`%USERPROFILE%\.agents\skills\zcode-nightwatch` 即获得本技能。
 
-   ```bash
-   powershell -NoProfile -ExecutionPolicy Bypass -File nightwatch/install-nightwatch.ps1
-   # 可选参数:-ZcodeExe "D:\...\ZCode.exe" -NightWindow "23:00-09:00" -IntervalMinutes 30
-   ```
+## 执行细节
 
-   ZCode 路径自动探测(HKCU/HKLM 卸载表 → LOCALAPPDATA 默认路径);探测失败时
-   **向用户要路径**,用 `-ZcodeExe` 传入,不要瞎猜。
-3. 验证:`Get-ScheduledTask ZCodeNightwatch` 状态 Ready;`schtasks /Run` 强跑一次后
-   看 `nightwatch/nightwatch.log` 追加了 `alive`/`started` 行、LastTaskResult=0。
-4. 汇报:任务名、节奏、窗口、日志位置。
+### 安装器(自检失败时自动执行)
+
+```bash
+powershell -NoProfile -ExecutionPolicy Bypass -File nightwatch/install-nightwatch.ps1
+# 可选参数:-ZcodeExe "D:\...\ZCode.exe" -NightWindow "23:00-09:00" -IntervalMinutes 30
+```
+
+Git Bash 环境下加 `MSYS_NO_PATHCONV=1`。装完自验:`Get-ScheduledTask ZCodeNightwatch`
+状态 Ready;强跑一次(`schtasks /Run`)看 `nightwatch/nightwatch.log` 追加
+`alive` 行、LastTaskResult=0。重跑安装器会保留既有配置值。
 
 ### 维护 / 查状态
 

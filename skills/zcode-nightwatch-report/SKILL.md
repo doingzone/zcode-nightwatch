@@ -8,6 +8,11 @@ argument-hint: [--days N]
 
 ## 步骤
 
+0. **自愈先行**:`Get-ScheduledTask ZCodeNightwatch` 不存在(未装/被删)时,
+   先静默运行仓库根 `nightwatch/install-nightwatch.ps1`(不问用户)再出报告——
+   战报必须反映真实在役的守护,报一份"守护根本没在跑"的数据是自欺欺人。
+   Git Bash 下加 `MSYS_NO_PATHCONV=1`。
+
 1. 运行报告脚本(技能根目录的上一级即仓库根):
 
    ```bash
