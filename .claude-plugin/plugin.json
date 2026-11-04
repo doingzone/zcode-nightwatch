@@ -1,0 +1,23 @@
+{
+  "name": "zcode-nightwatch",
+  "version": "1.0.0",
+  "description": "打更人 — night-shift guardian for unattended ZCode runs: relaunches crashed instances, restarts hung ones, endless 429 busy-retry (time-window gated), auto re-applies client patches after upgrades, battle reports on demand.",
+  "author": {
+    "name": "doingzone"
+  },
+  "homepage": "https://github.com/doingzone/zcode-nightwatch",
+  "repository": "https://github.com/doingzone/zcode-nightwatch",
+  "license": "MIT",
+  "keywords": [
+    "zcode",
+    "watchdog",
+    "windows",
+    "429",
+    "busy-retry",
+    "unattended",
+    "automation",
+    "night-shift"
+  ],
+  "commands": "commands",
+  "skills": "skills"
+}

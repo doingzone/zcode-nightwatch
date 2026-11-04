@@ -115,11 +115,15 @@ def in_window(now: datetime, window: tuple[str, str]) -> bool:
 
 
 def any_zcode() -> bool:
+    # bytes-only capture: tasklist emits GBK ("信息: 没有运行的任务...") when
+    # nothing matches, and text mode may decode as utf-8 (system UTF-8 option)
+    # crashing the reader thread; decode tolerantly instead.
     out = subprocess.run(
         ["tasklist", "/FI", f"IMAGENAME eq {PROC_NAME}", "/FO", "CSV", "/NH"],
-        capture_output=True, text=True, timeout=30, creationflags=NO_WINDOW,
+        capture_output=True, timeout=30, creationflags=NO_WINDOW,
     )
-    return PROC_NAME.lower() in out.stdout.lower()
+    stdout = out.stdout.decode("utf-8", errors="replace")
+    return PROC_NAME.lower() in stdout.lower()
 
 
 def windowed_processes():
@@ -131,7 +135,8 @@ def windowed_processes():
     )
     out = subprocess.run(
         ["powershell", "-NoProfile", "-Command", cmd],
-        capture_output=True, text=True, timeout=60, creationflags=NO_WINDOW,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        timeout=60, creationflags=NO_WINDOW,
     )
     s = out.stdout.strip()
     if not s:

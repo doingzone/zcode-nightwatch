@@ -1,0 +1,33 @@
+{
+  "name": "doingzone-zcode",
+  "description": "打更人插件市场 — ZCode 桌面端夜间无人值守守护:崩溃拉起、卡死重启、429 忙碌无限重试(时段可配)、升级补丁自愈、战报可查。",
+  "owner": {
+    "name": "doingzone",
+    "url": "https://github.com/doingzone"
+  },
+  "plugins": [
+    {
+      "name": "zcode-nightwatch",
+      "source": "./",
+      "description": "打更人 —— ZCode 桌面无人值守守护:计划任务每 30 分钟巡更(崩溃点灯拉起/卡死拍醒,pythonw 零闪窗)、429 忙碌自动排队重试(时段可配,退避封顶 60s 插进去为止)、升级后客户端补丁自动重打(node 预检避让残缺文件)、战报一条命令可查。装上即在岗:SessionStart 钩子每次会话启动静默自愈。",
+      "description_i18n": {
+        "en": "Nightwatch — a silent Windows scheduled-task guardian for unattended ZCode runs: relaunches crashed instances, restarts hung ones, endless start-plan 429 busy-retry (time-window gated), auto re-applies client patches after ZCode upgrades (pre-flight syntax check), battle reports via one command. Zero-touch: a SessionStart hook self-heals on every session start.",
+        "zh-CN": "打更人 —— ZCode 桌面无人值守守护:计划任务每 30 分钟巡更(崩溃点灯拉起/卡死拍醒,pythonw 零闪窗)、429 忙碌自动排队重试(时段可配,退避封顶 60s 插进去为止)、升级后客户端补丁自动重打(node 预检避让残缺文件)、战报一条命令可查。装上即在岗:SessionStart 钩子每次会话启动静默自愈。"
+      },
+      "version": "1.0.0",
+      "author": {
+        "name": "doingzone"
+      },
+      "category": "automation",
+      "keywords": [
+        "watchdog",
+        "429",
+        "busy-retry",
+        "unattended",
+        "windows",
+        "night-shift",
+        "打更人"
+      ]
+    }
+  ]
+}

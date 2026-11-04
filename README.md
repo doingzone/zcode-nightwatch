@@ -76,7 +76,19 @@ night runs alive — crash relaunch, hang restart, 429 busy-retry queue, battle 
 
 要求:Windows 10+、Python 3.8+(含 pythonw)、ZCode 桌面端。
 
-### 方式一:让 AI 助手装(推荐)
+### 方式一:插件市场安装(推荐)
+
+本仓库本身就是一个 ZCode 插件市场。在 ZCode 里(`/plugin` 命令或 设置 → 插件):
+
+1. **添加市场**:`doingzone/zcode-nightwatch`
+2. **安装插件**:`zcode-nightwatch`
+
+装上即在岗:插件自带 SessionStart 钩子,每次会话启动静默自愈——守护任务缺失自动装、
+补丁被升级扫掉自动重打;`/zcode-nightwatch` 与 `/zcode-nightwatch-report` 两个命令随
+插件注册,守护计划任务每 30 分钟自动巡更。全程无需发号施令。
+(不想让 hook 复活守护?`nightwatch/uninstall-nightwatch.ps1` 会写 opt-out 旗标。)
+
+### 方式二:让 AI 助手装(clone 即用)
 
 ```bash
 git clone https://github.com/doingzone/zcode-nightwatch "%USERPROFILE%\.agents\skills\zcode-nightwatch"
@@ -90,7 +102,7 @@ clone 完即结束。之后**任何一次提到打更人**(比如随口问一句
 | `/zcode-nightwatch` | 运行态保障:自检 / 缺装 / 改配置 / 卸载 |
 | `/zcode-nightwatch-report` | 查看战报(已安装 humanizer 技能时自动说人话) |
 
-### 方式二:手动一条命令
+### 方式三:手动一条命令
 
 ```powershell
 git clone https://github.com/doingzone/zcode-nightwatch

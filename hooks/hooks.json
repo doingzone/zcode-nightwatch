@@ -1,0 +1,21 @@
+{
+  "description": "打更人:会话启动时静默自愈——守护计划任务缺失则安装、客户端补丁被 ZCode 升级扫掉则自动重打(仅文件操作,绝不重启 ZCode;nightwatch.disabled 存在时豁免,卸载命令会写该旗标)。",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "process",
+            "command": "python",
+            "args": [
+              "${ZCODE_PLUGIN_ROOT}/hooks/session-start.py"
+            ],
+            "timeoutMs": 90000,
+            "statusMessage": "打更人:巡夜自检…"
+          }
+        ]
+      }
+    ]
+  }
+}

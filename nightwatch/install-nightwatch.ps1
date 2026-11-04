@@ -127,6 +127,8 @@ if ($existing) {
     }
 }
 $config | ConvertTo-Json -Depth 5 | Set-Content -Path (Join-Path $PSScriptRoot "nightwatch.json") -Encoding UTF8
+# re-arm the SessionStart hook self-heal if the guardian was opted out earlier
+Remove-Item -ErrorAction SilentlyContinue (Join-Path $PSScriptRoot "nightwatch.disabled")
 
 # --- register the scheduled task (interactive session: os.startfile must land
 # on the user's desktop, so no S4U / no "whether logged on" mode) ---
