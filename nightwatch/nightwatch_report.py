@@ -166,12 +166,12 @@ def scan_watchdog_log(days: int) -> dict:
             out["checks"] += 1
         elif "not running -> starting" in line:
             out["relaunch"] += 1
-            out["events"].append(f"{ts[5:]}  崩溃拉起(进程消失后重新启动)")
+            out["events"].append(f"{ts[5:]}  三更天,ZCode 没了 → 点灯拉起")
         elif "killed hung" in line:
             out["restart"] += 1
-            out["events"].append(f"{ts[5:]}  卡死强杀重启")
+            out["events"].append(f"{ts[5:]}  装死被识破 → 强制拍醒")
         elif "unresponsive" in line:
-            out["events"].append(f"{ts[5:]}  观察到无响应,继续确认中")
+            out["events"].append(f"{ts[5:]}  有装死嫌疑,再盯一轮")
     return out
 
 
@@ -218,10 +218,20 @@ def main() -> int:
 
     saved_api = logs["busy_retry"] + logs["verify_retry"] + logs["generic_limited"]
     saved_app = nw["relaunch"] + nw["restart"]
+    mode_raw = cfg.get("busy_retry_window") or "all_day"
+    if mode_raw == "all_day":
+        mode = "全天"
+    elif mode_raw == "night":
+        mode = "夜间(" + "-".join(cfg.get("window", ["23:00", "09:00"])) + ")"
+    elif mode_raw == "off":
+        mode = "已关闭"
+    else:
+        mode = mode_raw
+    patch_txt = "是" if patch else ("否" if patch is False else "未知")
     lines = []
-    lines.append(f"=== 守夜人战报(近 {days} 天,{datetime.now():%Y-%m-%d %H:%M} 生成)===")
+    lines.append(f"=== 打更人战报(近 {days} 天,{datetime.now():%Y-%m-%d %H:%M} 生成)===")
     lines.append("")
-    lines.append(f"[客户端补丁层] busy-retry 补丁在场: {'是' if patch else ('否' if patch is False else '未知')}")
+    lines.append(f"[客户端补丁层] 429 守护时段: {mode} | busy-retry 补丁在场: {patch_txt}")
     if logs.get("dir_missing"):
         lines.append(f"  [提示] 未找到 ZCode 日志目录 {logs_dir} —— 检查 nightwatch.json 的 zcode_data_dir")
     lines.append(f"  429 忙碌重试(主回合): {logs['busy_retry']} 次")
@@ -234,8 +244,8 @@ def main() -> int:
     for r in unsaved[:5]:
         lines.append(f"    - {r['date']} [{r['code']}] {r['title'][:40]}")
     lines.append("")
-    lines.append(f"[应用守护层] 夜间窗口巡查: {nw['checks']} 次")
-    lines.append(f"  崩溃拉起: {nw['relaunch']} 次;卡死强杀重启: {nw['restart']} 次")
+    lines.append(f"[应用守护层] 巡更: {nw['checks']} 次")
+    lines.append(f"  点灯拉起: {nw['relaunch']} 次;拍醒重启: {nw['restart']} 次")
     for e in nw["events"][:10]:
         lines.append(f"    - {e}")
     lines.append("")

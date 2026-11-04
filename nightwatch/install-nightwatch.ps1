@@ -8,6 +8,11 @@
 # Optional params:
 #   -ZcodeExe "D:\path\to\ZCode.exe"   # auto-detected when omitted
 #   -NightWindow "23:00-09:00" -IntervalMinutes 30 -HangThresholdMin 15
+#   -BusyRetryWindow all_day|night|off|HH:MM-HH:MM   # 429 guard scope
+#       all_day (default): endless busy-retry around the clock
+#       night            : only inside -NightWindow
+#       off              : no client patch layer (watchdog only)
+#       HH:MM-HH:MM      : custom window (e.g. "13:00-22:00")
 
 param(
     [string]$ZcodeExe = "",
@@ -16,13 +21,14 @@ param(
     [int]$HangThresholdMin = 15,
     [string]$TaskName = "ZCodeNightwatch",
     [string]$ZcodeDataDir = "",
+    [string]$BusyRetryWindow = "",
     [switch]$NoCliShim
 )
 
 $ErrorActionPreference = "Stop"
 $script = Join-Path $PSScriptRoot "zcode_nightwatch.py"
 
-# --- resolve pythonw.exe (windowless interpreter) ---
+# --- resolve python.exe / pythonw.exe (windowless for the task, console for tooling) ---
 $pyw = Get-Command pythonw.exe -ErrorAction SilentlyContinue
 if ($pyw) {
     $pyPath = $pyw.Source
@@ -32,8 +38,15 @@ if ($pyw) {
     if (-not (Test-Path $candidate)) { Write-Error "pythonw.exe not found"; exit 1 }
     $pyPath = $candidate
 }
+$pyConsole = Get-Command python.exe -ErrorAction SilentlyContinue
+if ($pyConsole) { $pyConsole = $pyConsole.Source }
+else {
+    $cand = Join-Path (Split-Path $pyPath) "python.exe"
+    if (Test-Path $cand) { $pyConsole = $cand }
+}
 
-# --- resolve ZCode.exe: param > existing config > registry > common paths ---
+# --- resolve ZCode.exe ---
+# Order: param > existing config > RUNNING PROCESS > registry > common paths.
 # Re-run friendliness: preserve values that cannot be re-detected when the
 # caller left the parameter at its default (empty string).
 $cfgPath = Join-Path $PSScriptRoot "nightwatch.json"
@@ -43,6 +56,21 @@ if (Test-Path $cfgPath) {
 }
 if (-not $ZcodeExe -and $existing -and $existing.zcode_exe) { $ZcodeExe = $existing.zcode_exe }
 if (-not $ZcodeDataDir -and $existing -and $existing.zcode_data_dir) { $ZcodeDataDir = $existing.zcode_data_dir }
+if (-not $BusyRetryWindow -and $existing -and $existing.busy_retry_window) { $BusyRetryWindow = $existing.busy_retry_window }
+if (-not $BusyRetryWindow) { $BusyRetryWindow = "all_day" }
+if ($BusyRetryWindow -notmatch '^(all_day|night|off|\d{1,2}:\d{2}-\d{1,2}:\d{2})$') {
+    Write-Error "-BusyRetryWindow must be all_day | night | off | HH:MM-HH:MM (got '$BusyRetryWindow')"
+    exit 1
+}
+
+if (-not $ZcodeExe) {
+    # a running ZCode knows exactly where it lives - the most reliable signal
+    foreach ($p in (Get-Process ZCode -ErrorAction SilentlyContinue)) {
+        try {
+            if ($p.Path -and (Test-Path $p.Path)) { $ZcodeExe = $p.Path; break }
+        } catch { }
+    }
+}
 
 # NSIS/electron-builder uninstall entries often leave InstallLocation EMPTY -
 # derive the install dir from UninstallString / DisplayIcon instead.
@@ -90,6 +118,7 @@ $config = [ordered]@{
     zcode_data_dir     = $ZcodeDataDir
     window             = @($parts[0].Trim(), $parts[1].Trim())
     hang_threshold_min = $HangThresholdMin
+    busy_retry_window  = $BusyRetryWindow
 }
 $config | ConvertTo-Json | Set-Content -Path (Join-Path $PSScriptRoot "nightwatch.json") -Encoding UTF8
 
@@ -104,12 +133,29 @@ Write-Host "     zcode_exe : $ZcodeExe"
 Write-Host "     window    : $NightWindow  hang threshold: ${HangThresholdMin} min"
 Write-Host "     config    : $(Join-Path $PSScriptRoot 'nightwatch.json')"
 
+# --- 429 busy-retry patch layer (client side, gated by BusyRetryWindow) ---
+$patchPy = Join-Path $PSScriptRoot "busy_retry_patch.py"
+if (Test-Path $patchPy) {
+    if (-not $pyConsole) {
+        Write-Warning "python.exe not found - busy-retry patch skipped (watchdog itself is unaffected)"
+    } else {
+        Write-Host "[..] applying busy-retry patch (window: $BusyRetryWindow)"
+        & $pyConsole $patchPy --zcode-exe $ZcodeExe --window $BusyRetryWindow 2>&1 |
+            ForEach-Object { Write-Host "     $_" }
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "busy-retry patch failed - watchdog is still installed; a ZCode update likely"
+            Write-Warning "changed the bundle. Re-run this installer once anchors are updated."
+        }
+    }
+} else {
+    Write-Warning "busy_retry_patch.py not found next to installer - 429 guard layer skipped"
+}
+
 # --- global CLI shim: `nightwatch` prints the effectiveness report in any terminal ---
 if (-not $NoCliShim) {
     $pyDir = Split-Path $pyPath
     $shim = Join-Path $pyDir "nightwatch.cmd"
     $reportPy = Join-Path $PSScriptRoot "nightwatch_report.py"
-    $pyConsole = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
     $shimBody = "@echo off`r`nchcp 65001 >nul`r`nset PYTHONIOENCODING=utf-8`r`n`"$pyConsole`" `"$reportPy`" %*"
     Set-Content -Path $shim -Value $shimBody -Encoding ASCII
     Write-Host "     cli shim  : nightwatch (report, utf-8) -> $shim"

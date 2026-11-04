@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ZCode Nightwatch (守夜人) — night-shift guardian for the ZCode desktop app.
+ZCode Nightwatch (打更人) — night-shift guardian for the ZCode desktop app.
 
 Runs once per invocation, driven by Windows Task Scheduler (default: every
 30 minutes, silent - pythonw + CREATE_NO_WINDOW). Inside the configured night

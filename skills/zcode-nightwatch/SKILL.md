@@ -1,13 +1,13 @@
 ---
 name: zcode-nightwatch
-description: 守夜人运行态保障——本技能的唯一使命是"守夜人在运行"。任何会话提到守夜人/夜间自动化守护/ZCode 崩溃卡死时:先自检 ZCodeNightwatch 计划任务,在位则报一行状态,缺失则不问直接静默安装并验证。不需要用户发号施令。不处理模型 API 报错(那是客户端补丁的事)。
+description: 打更人运行态保障——本技能的唯一使命是"打更人在运行"。任何会话提到打更人/夜间自动化守护/ZCode 崩溃卡死时:先自检 ZCodeNightwatch 计划任务,在位则报一行状态,缺失则不问直接静默安装并验证。不需要用户发号施令。不处理模型 API 报错(那是客户端补丁的事)。
 ---
 
-# ZCode Nightwatch(守夜人)
+# ZCode Nightwatch(打更人)
 
 ## 铁律:自检优先,缺装不问
 
-用户引用本技能 = 想让守夜人处于工作状态,**不是**想听介绍或被问要不要装。
+用户引用本技能 = 想让打更人处于工作状态,**不是**想听介绍或被问要不要装。
 任何触发的固定流程:
 
 1. 自检:`Get-ScheduledTask ZCodeNightwatch`(存在且 Ready → 跳到 3)。
@@ -26,17 +26,22 @@ description: 守夜人运行态保障——本技能的唯一使命是"守夜人
 ```bash
 powershell -NoProfile -ExecutionPolicy Bypass -File nightwatch/install-nightwatch.ps1
 # 可选参数:-ZcodeExe "D:\...\ZCode.exe" -NightWindow "23:00-09:00" -IntervalMinutes 30
+#          -BusyRetryWindow all_day|night|off|HH:MM-HH:MM   (429 守护时段,默认 all_day)
 ```
 
 Git Bash 环境下加 `MSYS_NO_PATHCONV=1`。装完自验:`Get-ScheduledTask ZCodeNightwatch`
 状态 Ready;强跑一次(`schtasks /Run`)看 `nightwatch/nightwatch.log` 追加
 `alive` 行、LastTaskResult=0。重跑安装器会保留既有配置值。
+安装器会顺带应用 429 busy-retry 补丁(输出 `[OK]/[SKIP]` 即成功;ZCode 需重启加载)。
 
 ### 维护 / 查状态
 
 - 日志:`nightwatch/nightwatch.log`(每次运行一行;非 alive 行即事件)。
 - 改窗口/阈值:直接编辑 `nightwatch/nightwatch.json`(无需重注册任务,下一次运行生效)。
 - 改检查间隔:重跑安装器(带 `-IntervalMinutes`)。
+- 改 429 守护时段:编辑 `nightwatch.json` 的 `busy_retry_window`
+  (`all_day`/`night`/`HH:MM-HH:MM`/`off`),再跑
+  `python nightwatch/busy_retry_patch.py` 换窗,**重启 ZCode** 生效。
 
 ### 卸载
 
@@ -48,7 +53,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File nightwatch/uninstall-nightwa
 
 战报有专属技能与命令,**不要在本技能里手动跑报告脚本**:
 
-- 用户输入 `/zcode-nightwatch-report` 或问"守夜人效果如何" → 由
+- 用户输入 `/zcode-nightwatch-report` 或问"打更人效果如何" → 由
   `zcode-nightwatch-report` 技能处理(会自动调用 humanizer 说人话);
 - 终端里用户可直接敲 `nightwatch` 命令(安装器装的 shim,支持 `--days N` / `--md`)。
 - 安装器新装时若目录里没有 `nightwatch/nightwatch_report.py`,提示用户 `git pull`。

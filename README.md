@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🌙 ZCode Nightwatch
+# 🥁 ZCode Nightwatch · 打更人
 
-**守夜人** · Night-shift guardian for ZCode desktop automations —
+**打更人** · Night-shift guardian for ZCode desktop automations —
 a silent Windows scheduled-task guardian that keeps your unattended ZCode
 night runs alive: relaunches crashed instances, restarts hung ones, and
 reports exactly what it saved.
@@ -12,7 +12,7 @@ reports exactly what it saved.
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 ![Mode](https://img.shields.io/badge/runtime-pythonw%20%2B%20CREATE__NO__WINDOW-success)
 
-**长夜将至,我从今开始守望。**
+**天干物燥,小心火烛。**
 ZCode 这家伙又菜又能发钱——它只管倒下,我负责让它看起来像没倒过。
 **每天 3 亿 token 的蛋,别让它臭在凌晨三点。**
 
@@ -38,22 +38,32 @@ ZCode 这家伙又菜又能发钱——它只管倒下,我负责让它看起来�
 
 哀其不幸,怒其不争。但它发的蛋是真的香,所以我没打算放弃它。
 
-守夜人,就是给这位病秧子豪门雇的夜间陪护,职责一共三句:
+打更人,就是给这位病秧子豪门雇的更夫——每半个时辰巡一次宅,宅子空了点灯,人装死了拍醒。职责一共三句:
 
 - 🐔 **你又厥过去了?** —— 30 分钟内拉起来,当无事发生,你只当做了个梦;
 - 🚧 **下蛋的管道又堵了(429)?** —— 配套补丁层替你排队,插进去为止,你睡你的;
 - 📊 **战报记账** —— "挽回 9 次"不是吹的,是磁盘上一行行日志数出来的,不服自己敲 `nightwatch`。
 
 > 作者亲历(2026-10-28):某豪门当夜连厥三次(02:03 / 02:48 / 02:53),
-> 一次跑了 27 分钟的自动化卒于半路。第二天守夜人上岗,当晚拉起 9 次。
+> 一次跑了 27 分钟的自动化卒于半路。第二天打更人上岗,当晚拉起 9 次。
 >
 > **你尽管倒,我反正不睡。你的 3 亿 token,一颗都不许臭。**
+
+<p align="center">
+  <img src="docs/img/reconnecting-4of10.png" alt="实拍:凌晨两点,会话流中断后 ZCode 自动重连中(第 4/10 次)" width="720">
+</p>
+
+> 实拍 · 凌晨两点:流断了,屏幕上挂着"重新连接中 4/10"——注意,是**它在重连**,
+> 不是凌晨三点的你在点"继续"。中断只是个瞬间,不是终点;打更人的全部工作,
+> 就是让这一幕成为凌晨的常态。
 
 ## ✨ 特性
 
 - 🌙 **夜间窗口值守**——默认 23:00–09:00 每 30 分钟巡查,白天零活动(触发即秒退)
 - 🔁 **崩溃自动拉起**——进程消失,下一次巡查自动启动,夜间自动化不断线
 - 🪓 **卡死自动重启**——主窗口无响应跨两个周期确认才动手,绝不误杀短暂卡顿
+- 🛡️ **429 忙碌自动排队**——配套补丁层把 start-plan"系统繁忙"的重试改成无限次
+  (退避封顶 60s,插进去为止),守护时段可配:全天 / 仅夜间 / 自定义(`-BusyRetryWindow`)
 - 🤫 **全程无感**——计划任务动作是无控制台的 `pythonw.exe`,所有子进程带
   `CREATE_NO_WINDOW`,零窗口闪烁
 - 📊 **效果战报**——一条命令查看真实挽回记录,数字全部来自磁盘日志,可量化、可晒图
@@ -69,7 +79,7 @@ ZCode 这家伙又菜又能发钱——它只管倒下,我负责让它看起来�
 git clone https://github.com/doingzone/zcode-nightwatch "%USERPROFILE%\.agents\skills\zcode-nightwatch"
 ```
 
-clone 完即结束。之后**任何一次提到守夜人**(比如随口问一句"守夜人在吗"),AI 助手
+clone 完即结束。之后**任何一次提到打更人**(比如随口问一句"打更人在吗"),AI 助手
 都会自检守护任务——缺失就静默装好,不问第二句。装好后你会得到两个命令:
 
 | 命令 | 用途 |
@@ -84,8 +94,10 @@ git clone https://github.com/doingzone/zcode-nightwatch
 powershell -NoProfile -ExecutionPolicy Bypass -File zcode-nightwatch\nightwatch\install-nightwatch.ps1
 ```
 
-可选参数:`-ZcodeExe "D:\...\ZCode.exe"`(探测失败时指定)、`-NightWindow "23:00-09:00"`、
-`-IntervalMinutes 30`、`-HangThresholdMin 15`、`-ZcodeDataDir "D:\...\.zcode"`(战报数据源,默认 `%USERPROFILE%\.zcode`)。
+可选参数:`-ZcodeExe "D:\...\ZCode.exe"`(探测失败时指定;优先从**运行中的 ZCode 进程**自动识别)、
+`-NightWindow "23:00-09:00"`、`-IntervalMinutes 30`、`-HangThresholdMin 15`、
+`-ZcodeDataDir "D:\...\.zcode"`(战报数据源,默认 `%USERPROFILE%\.zcode`)、
+`-BusyRetryWindow all_day|night|off|HH:MM-HH:MM`(429 守护时段,**默认全天**——下午高峰也护)。
 
 ## 📊 查看战报
 
@@ -114,15 +126,15 @@ python nightwatch/nightwatch_report.py
 真实输出(本机 2026-11-05 实测):
 
 ```
-=== 守夜人战报(近 30 天,2026-11-05 00:58 生成)===
+=== 打更人战报(近 30 天,2026-11-05 00:58 生成)===
 
-[客户端补丁层] busy-retry 补丁在场: 是
+[客户端补丁层] 429 守护时段: 全天 | busy-retry 补丁在场: 是
   429 忙碌重试(主回合): 0 次
   ...
-[应用守护层] 夜间窗口巡查: 269 次
-  崩溃拉起: 9 次;卡死强杀重启: 0 次
-    - 10-28 02:53:01  崩溃拉起(进程消失后重新启动)
-    - 10-28 03:33:03  崩溃拉起(进程消失后重新启动)
+[应用守护层] 巡更: 269 次
+  点灯拉起: 9 次;拍醒重启: 0 次
+    - 10-28 02:53:01  三更天,ZCode 没了 → 点灯拉起
+    - 10-28 03:33:03  三更天,ZCode 没了 → 点灯拉起
     ...
 === 合计挽回: API 层 0 次 + 应用层 9 次 = 9 次 ===
 ```
@@ -139,9 +151,14 @@ python nightwatch/nightwatch_report.py
   "zcode_exe": "D:\\...\\ZCode.exe",
   "zcode_data_dir": "C:\\Users\\you\\.zcode",
   "window": ["23:00", "09:00"],
-  "hang_threshold_min": 15
+  "hang_threshold_min": 15,
+  "busy_retry_window": "all_day"
 }
 ```
+
+- `window`:打更人巡更窗口(崩溃/卡死守护只在窗口内活动);
+- `busy_retry_window`:429 守护时段,`all_day` / `night`(= window)/ `HH:MM-HH:MM` / `off`。
+  改完跑一次 `python nightwatch/busy_retry_patch.py` 换窗并**重启 ZCode** 生效。
 
 日志:`nightwatch/nightwatch.log`,每次运行一行;非 `alive` 行即事件(启动/重启/等待确认)。
 
@@ -151,8 +168,9 @@ python nightwatch/nightwatch_report.py
 `os.startfile` 拉起;在则用 `Get-Process` 检查主窗口 `Responding`,无响应需跨两个周期
 确认(状态文件记录首次发现时刻)再 `taskkill` 重启。整条链路对用户不可见。
 
-ZCode 安装路径自动探测:注册表卸载表(NSIS 条目的 `InstallLocation` 常为空,会从
-`UninstallString` / `DisplayIcon` 反推)→ `LOCALAPPDATA` 默认路径 → 安装时手动指定。
+ZCode 安装路径自动探测:**运行中的 ZCode 进程**(最可靠)→ 注册表卸载表(NSIS 条目的
+`InstallLocation` 常为空,会从 `UninstallString` / `DisplayIcon` 反推)→ `LOCALAPPDATA`
+默认路径 → 安装时手动指定。装完自动应用 429 补丁层(时段由 `-BusyRetryWindow` 决定)。
 
 ## ❓ FAQ
 
@@ -161,7 +179,7 @@ ZCode 安装路径自动探测:注册表卸载表(NSIS 条目的 `InstallLocatio
 
 不会。计划任务动作是 `pythonw.exe`(无控制台 Python),脚本内所有子进程
 (tasklist / powershell / taskkill)带 `CREATE_NO_WINDOW` 创建,零窗口闪烁。
-守夜人的职业素养之一:干活不出声。
+打更人的职业素养之一:干活不出声。
 </details>
 
 <details>
@@ -181,14 +199,16 @@ ZCode 安装路径自动探测:注册表卸载表(NSIS 条目的 `InstallLocatio
 <details>
 <summary><b>429 / 限流报错它管吗?</b></summary>
 
-守夜人管**应用级**生死(进程崩溃/卡死)。模型 API 限流由配套的客户端补丁层处理
-(启动器重试至插入为止),战报会把两层的挽回记录一起呈现,并标注补丁是否在场。
+管,而且是两层里的头一层。打更人自带客户端补丁:429"系统繁忙"时自动排队重试,
+退避封顶 60s,**插进去为止**——守护时段装的时候选好(`-BusyRetryWindow`,默认全天,
+下午高峰也护),之后改 `nightwatch.json` 的 `busy_retry_window` 再跑一次补丁脚本即可换窗。
+应用级生死(进程崩溃/卡死)由巡更计划任务兜底。战报会把两层的挽回记录一起呈现。
 </details>
 
 ## 🧱 边界
 
 - 只守护交互登录会话(拉起的窗口才会出现在你的桌面上);
-- ZCode 崩溃时正在跑的 agent 会话由 ZCode 自身恢复,守夜人不重发任务;
+- ZCode 崩溃时正在跑的 agent 会话由 ZCode 自身恢复,打更人不重发任务;
 - 不管理模型 API 报错与配额。
 
 ## 📄 License
