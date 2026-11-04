@@ -1,6 +1,6 @@
 ---
 name: zcode-nightwatch-report
-description: 查看打更人(ZCode Nightwatch)战报——429 报错被自动消化多少次、ZCode 半夜崩溃被拉起多少次、卡死被重启多少次。当用户问"打更人效果如何""夜巡战报""429 挽回记录""昨晚守护得怎么样"或输入 /zcode-nightwatch-report 时使用。
+description: 查看打更人(ZCode Nightwatch)战报——429 报错被自动消化多少次、ZCode 半夜崩溃被拉起多少次、卡死被重启多少次。当用户问"打更人效果如何""打更人战报""429 挽回记录""昨晚守护得怎么样"或输入 /zcode-nightwatch-report 时使用。
 argument-hint: [--days N]
 ---
 

@@ -1,11 +1,9 @@
 <div align="center">
 
-# 🥁 ZCode Nightwatch · 打更人
+# 🥁 ZCode 打更人
 
-**打更人** · Night-shift guardian for ZCode desktop automations —
-a silent Windows scheduled-task guardian that keeps your unattended ZCode
-night runs alive: relaunches crashed instances, restarts hung ones, and
-reports exactly what it saved.
+**打更人**——ZCode 桌面无人值守的夜班守护:一个静默的 Windows 计划任务,
+崩溃自动拉起、卡死自动重启、429 忙碌自动排队;干了什么,战报说话。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2B-blue)
@@ -15,6 +13,9 @@ reports exactly what it saved.
 **天干物燥,小心火烛。**
 ZCode 这家伙又菜又能发钱——它只管倒下,我负责让它看起来像没倒过。
 **每天 3 亿 token 的蛋,别让它臭在凌晨三点。**
+
+*English: a silent Windows scheduled-task guardian that keeps unattended ZCode
+night runs alive — crash relaunch, hang restart, 429 busy-retry queue, battle reports.*
 
 [快速开始](#-快速开始) · [查看战报](#查看战报) · [配置](#配置) · [升级后](#-zcode-升级后) · [FAQ](#faq)
 
