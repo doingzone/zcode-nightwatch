@@ -1,11 +1,11 @@
 <div align="center">
 
-# 🌙 ZCode Nightwatch(守夜人)
+# 🌙 ZCode Nightwatch
 
-**Night-shift guardian for ZCode desktop automations.**
-A silent Windows scheduled-task guardian that keeps your unattended ZCode
-night runs alive — relaunches crashed instances, restarts hung ones,
-and reports exactly what it saved.
+**守夜人** · Night-shift guardian for ZCode desktop automations —
+a silent Windows scheduled-task guardian that keeps your unattended ZCode
+night runs alive: relaunches crashed instances, restarts hung ones, and
+reports exactly what it saved.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2B-blue)
