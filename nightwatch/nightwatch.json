@@ -1,9 +1,9 @@
 {
   "zcode_exe": "D:\\Users\\doing\\AppData\\Local\\Programs\\ZCode\\ZCode.exe",
+  "zcode_data_dir": "D:\\Users\\doing\\.zcode",
   "window": [
     "23:00",
     "09:00"
   ],
-  "hang_threshold_min": 15,
-  "zcode_data_dir": "D:\\Users\\doing\\.zcode"
+  "hang_threshold_min": 15
 }

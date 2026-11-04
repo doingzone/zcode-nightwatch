@@ -26,10 +26,14 @@
 
 ### 方式一:让 AI 助手装(推荐)
 
-把本仓库 clone 到技能目录后,对助手说"给 ZCode 装个守夜人"即可:
+把本仓库 clone 到技能目录后,对助手说"给 ZCode 装个守夜人"即可。仓库含两个技能:
+
+- **`/zcode-nightwatch`** —— 安装、改配置、卸载、查状态
+- **`/zcode-nightwatch-report`** —— 随时查看战报(会调用 humanizer 技能说人话,若已安装)
 
 ```bash
 git clone https://github.com/doingzone/zcode-nightwatch "%USERPROFILE%\.agents\skills\zcode-nightwatch"
+# 然后把 skills\zcode-nightwatch-report 也挂进技能目录(或让助手代劳)
 ```
 
 ### 方式二:手动一条命令
@@ -40,10 +44,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File zcode-nightwatch\nightwatch\
 ```
 
 可选参数:`-ZcodeExe "D:\...\ZCode.exe"`(探测失败时指定)、`-NightWindow "23:00-09:00"`、
-`-IntervalMinutes 30`、`-HangThresholdMin 15`。
+`-IntervalMinutes 30`、`-HangThresholdMin 15`、`-ZcodeDataDir "D:\...\.zcode"`(战报数据源,默认 `%USERPROFILE%\.zcode`)。
 
-要求:Windows 10+、Python 3.8+(带 pythonw)、ZCode 桌面端。任务以当前登录用户的
-交互会话运行(拉起的窗口才会出现在你的桌面上)。
+## 看效果:一条命令
+
+安装器会在 Python 目录放一个全局 shim,任何终端敲:
+
+```bash
+nightwatch              # 近 7 天战报
+nightwatch --days 30    # 近 30 天
+```
+
+输出真实记录:429 忙碌重试消化了多少次、ZCode 崩溃被拉起多少次、卡死重启多少次、有没有漏救的。
 
 ## 配置
 
@@ -52,6 +64,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File zcode-nightwatch\nightwatch\
 ```json
 {
   "zcode_exe": "D:\\...\\ZCode.exe",
+  "zcode_data_dir": "C:\\Users\\you\\.zcode",
   "window": ["23:00", "09:00"],
   "hang_threshold_min": 15
 }

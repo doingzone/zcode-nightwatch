@@ -68,6 +68,7 @@ def scan_zcode_logs(logs_dir: Path, days: int) -> dict:
     out = {
         "busy_retry": 0, "verify_retry": 0, "exhausted": 0,
         "generic_limited": 0, "first": None, "last": None, "files": 0,
+        "dir_missing": not logs_dir.is_dir(),
     }
     if not logs_dir.is_dir():
         return out
@@ -193,6 +194,13 @@ def fmt_ts(ts: str | None) -> str:
 
 def main() -> int:
     args = sys.argv[1:]
+    # Force UTF-8 bytes regardless of console codepage (cmd pipes default to
+    # the ANSI codepage on zh-CN Windows, which garbles the Chinese report).
+    if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except (OSError, ValueError):
+            pass
     days = int(args[args.index("--days") + 1]) if "--days" in args else 7
     md_path = None
     if "--md" in args:
@@ -214,6 +222,8 @@ def main() -> int:
     lines.append(f"=== 守夜人战报(近 {days} 天,{datetime.now():%Y-%m-%d %H:%M} 生成)===")
     lines.append("")
     lines.append(f"[客户端补丁层] busy-retry 补丁在场: {'是' if patch else ('否' if patch is False else '未知')}")
+    if logs.get("dir_missing"):
+        lines.append(f"  [提示] 未找到 ZCode 日志目录 {logs_dir} —— 检查 nightwatch.json 的 zcode_data_dir")
     lines.append(f"  429 忙碌重试(主回合): {logs['busy_retry']} 次")
     lines.append(f"  429 忙碌重试(目标校验): {logs['verify_retry']} 次")
     lines.append(f"  通用层限流重试(rate_limited/overloaded): {logs['generic_limited']} 次")

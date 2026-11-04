@@ -15,7 +15,8 @@ param(
     [int]$IntervalMinutes = 30,
     [int]$HangThresholdMin = 15,
     [string]$TaskName = "ZCodeNightwatch",
-    [string]$ZcodeDataDir = ""
+    [string]$ZcodeDataDir = "",
+    [switch]$NoCliShim
 )
 
 $ErrorActionPreference = "Stop"
@@ -32,7 +33,17 @@ if ($pyw) {
     $pyPath = $candidate
 }
 
-# --- resolve ZCode.exe: param > registry (NSIS uninstall entries) > common paths ---
+# --- resolve ZCode.exe: param > existing config > registry > common paths ---
+# Re-run friendliness: preserve values that cannot be re-detected when the
+# caller left the parameter at its default (empty string).
+$cfgPath = Join-Path $PSScriptRoot "nightwatch.json"
+$existing = $null
+if (Test-Path $cfgPath) {
+    try { $existing = Get-Content $cfgPath -Raw -Encoding UTF8 | ConvertFrom-Json } catch { $existing = $null }
+}
+if (-not $ZcodeExe -and $existing -and $existing.zcode_exe) { $ZcodeExe = $existing.zcode_exe }
+if (-not $ZcodeDataDir -and $existing -and $existing.zcode_data_dir) { $ZcodeDataDir = $existing.zcode_data_dir }
+
 # NSIS/electron-builder uninstall entries often leave InstallLocation EMPTY -
 # derive the install dir from UninstallString / DisplayIcon instead.
 if (-not $ZcodeExe) {
@@ -92,4 +103,15 @@ Write-Host "[OK] $TaskName registered (every $IntervalMinutes min, silent)"
 Write-Host "     zcode_exe : $ZcodeExe"
 Write-Host "     window    : $NightWindow  hang threshold: ${HangThresholdMin} min"
 Write-Host "     config    : $(Join-Path $PSScriptRoot 'nightwatch.json')"
+
+# --- global CLI shim: `nightwatch` prints the effectiveness report in any terminal ---
+if (-not $NoCliShim) {
+    $pyDir = Split-Path $pyPath
+    $shim = Join-Path $pyDir "nightwatch.cmd"
+    $reportPy = Join-Path $PSScriptRoot "nightwatch_report.py"
+    $pyConsole = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
+    $shimBody = "@echo off`r`nchcp 65001 >nul`r`nset PYTHONIOENCODING=utf-8`r`n`"$pyConsole`" `"$reportPy`" %*"
+    Set-Content -Path $shim -Value $shimBody -Encoding ASCII
+    Write-Host "     cli shim  : nightwatch (report, utf-8) -> $shim"
+}
 Write-Host "     remove with: uninstall-nightwatch.ps1 -TaskName $TaskName"
