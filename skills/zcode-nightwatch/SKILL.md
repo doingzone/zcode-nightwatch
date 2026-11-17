@@ -78,6 +78,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File nightwatch/uninstall-nightwa
   文件(补丁标记消失 → 重跑 patcher),**绝不因此重启 ZCode**,补丁在应用下次启动时
   自然加载。挂新补丁进自愈:nightwatch.json 的 `extra_patchers` 加
   `{name, marker, script}`。
+- **overlay 自愈(overlay_selfheal)同理**:asar 注入标记缺失 → stage 待替换包 + 武装
+  脱离进程树的 finalize watcher(用户下次退出 ZCode 时换入)。想立刻收尾:
+  `python nightwatch/finalize_overlay.py --kill`(关 ZCode → 换入 → 重开)。
 - 白天(窗口外)触发会直接退出巡更逻辑——这是特性不是 bug;但补丁自愈在窗口判断之前
   已完成,不受此限。
 
