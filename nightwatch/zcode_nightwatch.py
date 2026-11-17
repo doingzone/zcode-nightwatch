@@ -217,6 +217,38 @@ def patch_selfheal(cfg: dict, dry: bool) -> None:
             log(f"[FAIL] {name} patch reapply rc={r.returncode} - anchor review needed")
 
 
+def overlay_selfheal(cfg: dict, dry: bool) -> None:
+    """Keep the token-usage status bar overlay alive (asar injection).
+
+    ZCode upgrades replace resources/app.asar, dropping the injected line.
+    Re-injection needs ZCode closed, so this only stages the package and
+    arms a detached watcher that swaps it in at the next exit. Never
+    restarts ZCode.
+    """
+    runtime = cfg.get("overlay_runtime_dir")
+    if not runtime:
+        return
+    exe = cfg.get("zcode_exe")
+    if not exe:
+        return
+    asar = Path(str(exe)).parent / "resources" / "app.asar"
+    script = HERE / "overlay_heal.py"
+    if not script.exists():
+        return
+    try:
+        r = subprocess.run(
+            [sys.executable, str(script), "--runtime-dir", str(runtime),
+             "--asar", str(asar)] + (["--dry-run"] if dry else []),
+            capture_output=True, encoding="utf-8", errors="replace",
+            timeout=600, creationflags=NO_WINDOW)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        log(f"[FAIL] overlay heal error: {e}")
+        return
+    out = (r.stdout or "").strip()
+    if out:
+        log("overlay heal: " + out.replace("\n", " | "))
+
+
 def main() -> int:
     args = sys.argv[1:]
     force = "--force" in args
@@ -231,6 +263,7 @@ def main() -> int:
     hang_min = int(cfg.get("hang_threshold_min", 15))
 
     patch_selfheal(cfg, dry)   # every tick, window-independent: silent file work only
+    overlay_selfheal(cfg, dry) # same: stage + arm watcher, never restart ZCode
 
     now = datetime.now()
     if not force and not in_window(now, window):
