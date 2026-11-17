@@ -100,6 +100,23 @@ def spawn_watcher(runtime: Path, dry: bool) -> bool:
         return True
     kwargs = dict(cwd=str(runtime), stdin=subprocess.DEVNULL,
                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Preferred: WMI/CIM creation - the process is parented by WmiPrvSE and
+    # therefore survives the caller's job object. A plain Popen child dies
+    # with the ZCode session that spawned it (observed repeatedly: the
+    # watcher vanished minutes after an agent tool call ended).
+    spawn_ps1 = runtime / "spawn_finalize_watch.ps1"
+    if spawn_ps1.exists():
+        try:
+            r = subprocess.run(
+                ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                 "-File", str(spawn_ps1)],
+                capture_output=True, encoding="utf-8", errors="replace",
+                timeout=60, creationflags=NO_WINDOW)
+            if r.returncode == 0 and "ReturnValue=0" in (r.stdout or ""):
+                return True
+            log(f"[WARN] WMI spawn returned: {(r.stdout or '').strip()[:120]}")
+        except (OSError, subprocess.TimeoutExpired) as e:
+            log(f"[WARN] WMI spawn failed: {e}")
     try:
         subprocess.Popen([str(pyw), str(script)],
                          creationflags=NO_WINDOW | DETACHED | BREAKAWAY, **kwargs)
